@@ -1,4 +1,6 @@
-import { sampleStats, sampleComplaints } from '../data/sampleData';
+import { useEffect, useState } from 'react';
+import { api, ApiError } from '../client';
+import type { ComplaintStats } from '../types/complaint';
 
 interface StatCardProps {
   icon: string;
@@ -20,22 +22,36 @@ function StatCard({ icon, value, label, glowColor, id }: StatCardProps) {
 }
 
 export default function StatsPage() {
-  const maxCount = Math.max(...sampleStats.byCategory.map((c) => c.count), 1);
+  const [stats, setStats] = useState<ComplaintStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Average upvotes
-  const avgUpvotes =
-    sampleComplaints.length > 0
-      ? Math.round(
-          sampleComplaints.reduce((s, c) => s + c.upvotes, 0) /
-            sampleComplaints.length
-        )
-      : 0;
+  useEffect(() => {
+    async function loadStats() {
+      setIsLoading(true);
+      setError('');
 
-  // Most reported category
-  const topCategory =
-    sampleStats.byCategory.length > 0
-      ? sampleStats.byCategory.reduce((a, b) => (a.count >= b.count ? a : b)).category
-      : '—';
+      try {
+        setStats(await api.getStats());
+      } catch (requestError) {
+        setError(
+          requestError instanceof ApiError && typeof requestError.detail === 'string'
+            ? requestError.detail
+            : 'Unable to load statistics. Please try again.'
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void loadStats();
+  }, []);
+
+  const categoryStats = stats?.byCategory ?? [];
+  const maxCount = Math.max(...categoryStats.map((category) => category.count), 1);
+  const topCategory = categoryStats.length > 0
+    ? categoryStats.reduce((a, b) => (a.count >= b.count ? a : b)).category
+    : '—';
 
   return (
     <main className="page-wrapper" id="stats-page">
@@ -49,49 +65,54 @@ export default function StatsPage() {
           </p>
         </div>
 
+        {error && (
+          <div className="toast" role="alert" style={{ marginBottom: 'var(--sp-5)' }}>
+            {error}
+          </div>
+        )}
+
+        {isLoading && (
+          <p style={{ color: 'var(--clr-text-muted)', marginBottom: 'var(--sp-5)' }}>
+            Loading statistics...
+          </p>
+        )}
+
         {/* KPI cards */}
         <div className="stats-grid" aria-label="Key metrics">
           <StatCard
             id="stat-total"
             icon="📋"
-            value={sampleStats.total}
+            value={stats?.total ?? 0}
             label="Total Complaints"
             glowColor="hsl(224, 76%, 55%)"
           />
           <StatCard
             id="stat-open"
             icon="🔵"
-            value={sampleStats.open}
+            value={stats?.open ?? 0}
             label="Open"
             glowColor="hsl(200, 80%, 55%)"
           />
           <StatCard
             id="stat-in-progress"
             icon="🟡"
-            value={sampleStats.in_progress}
+            value={stats?.in_progress ?? 0}
             label="In Progress"
             glowColor="hsl(38, 90%, 55%)"
           />
           <StatCard
             id="stat-resolved"
             icon="🟢"
-            value={sampleStats.resolved}
+            value={stats?.resolved ?? 0}
             label="Resolved"
             glowColor="hsl(156, 70%, 45%)"
           />
           <StatCard
             id="stat-rejected"
             icon="🔴"
-            value={sampleStats.rejected}
+            value={stats?.rejected ?? 0}
             label="Rejected"
             glowColor="hsl(0, 68%, 55%)"
-          />
-          <StatCard
-            id="stat-avg-upvotes"
-            icon="▲"
-            value={avgUpvotes}
-            label="Avg. Upvotes"
-            glowColor="hsl(156, 72%, 47%)"
           />
         </div>
 
@@ -109,7 +130,7 @@ export default function StatsPage() {
               Complaints by Category
             </h2>
             <div className="bar-list">
-              {sampleStats.byCategory
+              {[...categoryStats]
                 .sort((a, b) => b.count - a.count)
                 .map(({ category, count }) => (
                   <div key={category}>
@@ -148,21 +169,21 @@ export default function StatsPage() {
                   icon: '📊',
                   label: 'Resolution Rate',
                   value:
-                    sampleStats.total > 0
-                      ? `${Math.round((sampleStats.resolved / sampleStats.total) * 100)}%`
+                    stats && stats.total > 0
+                      ? `${Math.round((stats.resolved / stats.total) * 100)}%`
                       : '—',
                 },
                 {
                   icon: '⏳',
                   label: 'Pending (Open + In Progress)',
-                  value: sampleStats.open + sampleStats.in_progress,
+                  value: (stats?.open ?? 0) + (stats?.in_progress ?? 0),
                 },
                 {
                   icon: '❌',
                   label: 'Rejection Rate',
                   value:
-                    sampleStats.total > 0
-                      ? `${Math.round((sampleStats.rejected / sampleStats.total) * 100)}%`
+                    stats && stats.total > 0
+                      ? `${Math.round((stats.rejected / stats.total) * 100)}%`
                       : '—',
                 },
               ].map(({ icon, label, value }) => (
