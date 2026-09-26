@@ -1,7 +1,7 @@
 import React, { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Complaint, ComplaintCategory } from '../types/complaint';
-import { sampleComplaints } from '../data/sampleData';
+import type { ComplaintCategory } from '../types/complaint';
+import { api, ApiError } from '../client';
 
 const CATEGORIES: ComplaintCategory[] = [
   'Roads & Infrastructure',
@@ -25,6 +25,8 @@ export default function SubmitPage() {
   const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
   const [newId, setNewId] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const [form, setForm] = useState({
     title: '',
@@ -56,30 +58,44 @@ export default function SubmitPage() {
     }
   }
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
     if (!validate()) return;
 
-    // Phase 1: push to in-memory sample array (replaced by API call in Phase 3)
-    const id = `CMP-${String(sampleComplaints.length + 1).padStart(3, '0')}`;
-    const complaint: Complaint = {
-      id,
-      title: form.title.trim(),
-      description: form.description.trim(),
-      category: form.category as ComplaintCategory,
-      status: 'open',
-      submittedAt: new Date().toISOString(),
-      location: form.location.trim(),
-      upvotes: 0,
-    };
-    sampleComplaints.push(complaint);
-    setNewId(id);
-    setSubmitted(true);
+    setIsSubmitting(true);
+    setSubmitError('');
+
+    try {
+      const complaint = await api.createComplaint({
+        title: form.title.trim(),
+        description: form.description.trim(),
+        category: form.category as ComplaintCategory,
+        location: form.location.trim(),
+      });
+
+      setNewId(complaint.id);
+      setSubmitted(true);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setSubmitError(
+          typeof error.detail === 'string'
+            ? error.detail
+            : 'The server rejected the complaint.'
+        );
+      } else {
+        setSubmitError('Unable to submit the complaint. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function handleAnother() {
     setForm({ title: '', description: '', category: '', location: '' });
     setErrors({});
+    setSubmitError('');
+    setIsSubmitting(false);
     setSubmitted(false);
   }
 
@@ -217,8 +233,22 @@ export default function SubmitPage() {
               )}
             </div>
 
-            <button id="btn-submit" type="submit" className="btn btn--primary btn--full">
-              🚀 &nbsp;Submit Complaint
+            {submitError && (
+              <div
+                role="alert"
+                style={{ color: 'var(--clr-rejected)', fontSize: 'var(--fs-sm)' }}
+              >
+                {submitError}
+              </div>
+            )}
+
+            <button
+              id="btn-submit"
+              type="submit"
+              className="btn btn--primary btn--full"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Submitting...' : '🚀  Submit Complaint'}
             </button>
           </div>
         </form>

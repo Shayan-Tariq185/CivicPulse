@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { sampleComplaints } from '../data/sampleData';
+import { useEffect, useState } from 'react';
+import { api, ApiError } from '../client';
 import StatusBadge from '../components/StatusBadge';
-import type { ComplaintStatus } from '../types/complaint';
+import type { Complaint, ComplaintStatus } from '../types/complaint';
 
 const STATUS_OPTIONS: Array<ComplaintStatus | 'all'> = [
   'all', 'open', 'in_progress', 'resolved', 'rejected',
@@ -22,10 +22,58 @@ function formatDate(iso: string): string {
 }
 
 export default function DashboardPage() {
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ComplaintStatus | 'all'>('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState('');
+  const [statusError, setStatusError] = useState('');
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const filtered = sampleComplaints.filter((c) => {
+  useEffect(() => {
+    async function loadComplaints() {
+      setIsLoading(true);
+      setLoadingError('');
+
+      try {
+        setComplaints(await api.listComplaints());
+      } catch (error) {
+        setLoadingError(
+          error instanceof ApiError && typeof error.detail === 'string'
+            ? error.detail
+            : 'Unable to load complaints. Please try again.'
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void loadComplaints();
+  }, []);
+
+  async function handleStatusChange(id: string, status: ComplaintStatus) {
+    setUpdatingId(id);
+    setStatusError('');
+
+    try {
+      const updatedComplaint = await api.updateStatus(id, status);
+      setComplaints((current) =>
+        current.map((complaint) =>
+          complaint.id === id ? updatedComplaint : complaint
+        )
+      );
+    } catch (error) {
+      setStatusError(
+        error instanceof ApiError && typeof error.detail === 'string'
+          ? error.detail
+          : 'Unable to update the complaint status.'
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
+  const filtered = complaints.filter((c) => {
     const matchesStatus = statusFilter === 'all' || c.status === statusFilter;
     const q = search.toLowerCase();
     const matchesSearch =
@@ -84,13 +132,28 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {loadingError && (
+          <div className="empty-state" role="alert">
+            <div className="empty-state__title">Unable to load complaints</div>
+            <p>{loadingError}</p>
+          </div>
+        )}
+
+        {statusError && (
+          <div className="toast" role="alert" style={{ marginBottom: 'var(--sp-5)' }}>
+            {statusError}
+          </div>
+        )}
+
         {/* Count */}
         <p style={{ marginBottom: 'var(--sp-5)', color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)' }}>
-          Showing <strong style={{ color: 'var(--clr-text)' }}>{filtered.length}</strong> complaint{filtered.length !== 1 ? 's' : ''}
+          {isLoading ? 'Loading complaints...' : (
+            <>Showing <strong style={{ color: 'var(--clr-text)' }}>{filtered.length}</strong> complaint{filtered.length !== 1 ? 's' : ''}</>
+          )}
         </p>
 
         {/* Grid */}
-        {filtered.length === 0 ? (
+        {!isLoading && filtered.length === 0 ? (
           <div className="empty-state" id="dashboard-empty">
             <div className="empty-state__icon">🔍</div>
             <div className="empty-state__title">No complaints found</div>
@@ -116,12 +179,34 @@ export default function DashboardPage() {
                     🏷️ {c.category}
                   </div>
                   <div className="complaint-card__meta">
-                    📅 {formatDate(c.submittedAt)}
+                    📅 {formatDate(c.submitted_at)}
                   </div>
                   <div className="complaint-card__upvotes">
                     ▲ {c.upvotes}
                   </div>
                 </div>
+
+                <label className="form-label" htmlFor={`status-${c.id}`}>
+                  Update status
+                </label>
+                <select
+                  id={`status-${c.id}`}
+                  className="form-select"
+                  value={c.status}
+                  disabled={updatingId === c.id}
+                  onChange={(event) =>
+                    void handleStatusChange(
+                      c.id,
+                      event.target.value as ComplaintStatus
+                    )
+                  }
+                >
+                  {STATUS_OPTIONS.filter((status) => status !== 'all').map((status) => (
+                    <option key={status} value={status}>
+                      {STATUS_LABELS[status]}
+                    </option>
+                  ))}
+                </select>
               </article>
             ))}
           </div>
