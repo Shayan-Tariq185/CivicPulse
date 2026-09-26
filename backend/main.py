@@ -12,7 +12,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import complaints
+from routers import complaints, stats
 
 app = FastAPI(
     title="CivicPulse API",
@@ -33,6 +33,7 @@ app.add_middleware(
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(complaints.router, prefix="/api/v1")
+app.include_router(stats.router, prefix="/api/v1")
 
 
 # ── Root ──────────────────────────────────────────────────────────────────────
