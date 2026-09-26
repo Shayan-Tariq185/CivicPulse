@@ -1,4 +1,50 @@
+# ─── Secrets (NEVER commit these) ───────────────────────────────────────────
 .env
+.env.*
+!.env.example
+
+# ─── Python / FastAPI ────────────────────────────────────────────────────────
 .venv/
-node_modules/
+venv/
 __pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# ─── Node / Frontend ─────────────────────────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ─── Docker ──────────────────────────────────────────────────────────────────
+# (don't ignore docker-compose files — those are committed)
+docker-compose.override.yml
+
+# ─── Kubernetes / k3d ────────────────────────────────────────────────────────
+kubeconfig
+*.kubeconfig
+
+# ─── OS junk ─────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── IDEs ────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.user
+
+# ─── Logs ────────────────────────────────────────────────────────────────────
+*.log
+logs/
