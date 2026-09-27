@@ -1,72 +1,64 @@
 """
-In-memory complaint store.
+SQLAlchemy database repository for complaints.
 
-Phase 2: plain dict — no DB, no persistence.
-Phase 4 will replace this with SQLAlchemy + PostgreSQL.
-No business logic lives here — only raw CRUD.
+Phase 4: Uses PostgreSQL database to persist data.
 """
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
 from typing import Optional
 
-from schemas.complaint import ComplaintCategory, ComplaintCreate, ComplaintStatus
+from schemas.complaint import ComplaintCreate, ComplaintStatus
+from database import SessionLocal
+from models.complaint import ComplaintModel
 
 
-# Internal data model (not exposed outside this module)
-class _ComplaintRecord:
-    __slots__ = (
-        "id", "title", "description", "category",
-        "status", "location", "upvotes", "submitted_at",
-    )
-
-    def __init__(
-        self,
-        id: str,
-        title: str,
-        description: str,
-        category: ComplaintCategory,
-        location: str,
-    ) -> None:
-        self.id = id
-        self.title = title
-        self.description = description
-        self.category = category
-        self.status = ComplaintStatus.open
-        self.location = location
-        self.upvotes = 0
-        self.submitted_at = datetime.now(timezone.utc)
+def create(data: ComplaintCreate) -> ComplaintModel:
+    db = SessionLocal()
+    try:
+        complaint_id = f"CMP-{uuid.uuid4().hex[:8].upper()}"
+        record = ComplaintModel(
+            id=complaint_id,
+            title=data.title,
+            description=data.description,
+            category=data.category,
+            location=data.location,
+            status=ComplaintStatus.open,
+            upvotes=0
+        )
+        db.add(record)
+        db.commit()
+        db.refresh(record)
+        return record
+    finally:
+        db.close()
 
 
-# Single in-memory store — dict keyed by complaint id
-_store: dict[str, _ComplaintRecord] = {}
+def get_by_id(complaint_id: str) -> Optional[ComplaintModel]:
+    db = SessionLocal()
+    try:
+        return db.query(ComplaintModel).filter(ComplaintModel.id == complaint_id).first()
+    finally:
+        db.close()
 
 
-def create(data: ComplaintCreate) -> _ComplaintRecord:
-    complaint_id = f"CMP-{uuid.uuid4().hex[:8].upper()}"
-    record = _ComplaintRecord(
-        id=complaint_id,
-        title=data.title,
-        description=data.description,
-        category=data.category,
-        location=data.location,
-    )
-    _store[complaint_id] = record
-    return record
+def list_all() -> list[ComplaintModel]:
+    db = SessionLocal()
+    try:
+        return db.query(ComplaintModel).order_by(ComplaintModel.submitted_at.desc()).all()
+    finally:
+        db.close()
 
 
-def get_by_id(complaint_id: str) -> Optional[_ComplaintRecord]:
-    return _store.get(complaint_id)
-
-
-def list_all() -> list[_ComplaintRecord]:
-    return list(_store.values())
-
-
-def update_status(complaint_id: str, new_status: ComplaintStatus) -> Optional[_ComplaintRecord]:
-    record = _store.get(complaint_id)
-    if record is None:
-        return None
-    record.status = new_status
-    return record
+def update_status(complaint_id: str, new_status: ComplaintStatus) -> Optional[ComplaintModel]:
+    db = SessionLocal()
+    try:
+        record = db.query(ComplaintModel).filter(ComplaintModel.id == complaint_id).first()
+        if not record:
+            return None
+        record.status = new_status
+        db.commit()
+        db.refresh(record)
+        return record
+    finally:
+        db.close()
