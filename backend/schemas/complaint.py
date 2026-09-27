@@ -1,27 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
-
 from pydantic import BaseModel, Field
-
-
-class ComplaintCategory(str, Enum):
-    roads = "Roads & Infrastructure"
-    water = "Water & Sanitation"
-    electricity = "Electricity"
-    waste = "Waste Management"
-    safety = "Public Safety"
-    parks = "Parks & Recreation"
-    noise = "Noise Pollution"
-    other = "Other"
-
-
-class ComplaintStatus(str, Enum):
-    open = "open"
-    in_progress = "in_progress"
-    resolved = "resolved"
-    rejected = "rejected"
+from schemas.enums import ComplaintCategory, ComplaintStatus, Priority
 
 
 # ── Inbound ──────────────────────────────────────────────────────────────────
@@ -48,5 +29,10 @@ class ComplaintOut(BaseModel):
     location: str
     upvotes: int
     submitted_at: datetime
+    priority: Priority
+    ai_summary: str
+    triaged_by: str
+    triage_latency_ms: int
+    triage_confidence: float
 
     model_config = {"from_attributes": True}

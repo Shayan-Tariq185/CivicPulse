@@ -20,8 +20,8 @@ router = APIRouter(prefix="/complaints", tags=["complaints"])
     status_code=status.HTTP_201_CREATED,
     summary="Submit a new complaint",
 )
-def create_complaint(body: ComplaintCreate) -> ComplaintOut:
-    return complaint_service.create_complaint(body)
+async def create_complaint(body: ComplaintCreate) -> ComplaintOut:
+    return await complaint_service.create_complaint(body)
 
 
 @router.get(

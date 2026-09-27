@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Integer, DateTime
+from sqlalchemy import Column, String, Integer, DateTime, Float
 from database import Base
 
 class ComplaintModel(Base):
@@ -13,3 +13,8 @@ class ComplaintModel(Base):
     location = Column(String, nullable=False)
     upvotes = Column(Integer, default=0)
     submitted_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    priority = Column(String(10), nullable=False, default="normal")
+    ai_summary = Column(String(140), nullable=False, default="")
+    triaged_by = Column(String(50), nullable=False, default="rules")
+    triage_latency_ms = Column(Integer, nullable=False, default=0)
+    triage_confidence = Column(Float, nullable=False, default=0.0)

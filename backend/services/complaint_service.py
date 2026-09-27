@@ -6,9 +6,14 @@ Route handlers call service functions only.
 """
 from __future__ import annotations
 
+import time
+
 from fastapi import HTTPException, status
 
 from repositories import complaint_repo
+from providers.factory import get_triage_provider
+from providers.history import record_outcome
+from providers.rules import RuleBasedTriage
 from schemas.complaint import (
     ComplaintCreate,
     ComplaintOut,
@@ -35,11 +40,31 @@ def _to_out(record) -> ComplaintOut:
         location=record.location,
         upvotes=record.upvotes,
         submitted_at=record.submitted_at,
+        priority=record.priority,
+        ai_summary=record.ai_summary,
+        triaged_by=record.triaged_by,
+        triage_latency_ms=record.triage_latency_ms,
+        triage_confidence=record.triage_confidence,
     )
 
 
-def create_complaint(data: ComplaintCreate) -> ComplaintOut:
-    record = complaint_repo.create(data)
+async def create_complaint(data: ComplaintCreate) -> ComplaintOut:
+    started_at = time.perf_counter()
+    try:
+        triage_provider = get_triage_provider()
+        triage_result = await triage_provider.triage(data.description, data.location)
+    except Exception:
+        triage_result = await RuleBasedTriage().triage(data.description, data.location)
+        triage_result = triage_result.model_copy(update={"triaged_by": "rules:fallback"})
+
+    latency_ms = round((time.perf_counter() - started_at) * 1000)
+    record_outcome(
+        provider=triage_result.triaged_by,
+        latency_ms=latency_ms,
+        fallback=triage_result.triaged_by == "rules:fallback",
+    )
+    triaged_data = data.model_copy(update={"category": triage_result.category})
+    record = complaint_repo.create(triaged_data, triage_result, latency_ms)
     return _to_out(record)
 
 
