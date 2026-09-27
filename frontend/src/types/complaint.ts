@@ -4,6 +4,8 @@ export type ComplaintStatus =
   | 'resolved'
   | 'rejected';
 
+export type Priority = 'high' | 'normal' | 'low';
+
 export type ComplaintCategory =
   | 'Roads & Infrastructure'
   | 'Water & Sanitation'
@@ -34,6 +36,11 @@ export interface Complaint {
   location: string;
   upvotes: number;
   submitted_at: string;
+  priority: Priority;
+  ai_summary: string;
+  triaged_by: string;
+  triage_latency_ms: number;
+  triage_confidence: number;
 }
 
 export interface CategoryStat {
