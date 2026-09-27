@@ -43,7 +43,7 @@ def get_stats(response: Response) -> StatsOut:
         ],
     )
     
-    # 3. Save to Redis for 15 seconds
-    redis_db.setex(CACHE_KEY, 15, stats.model_dump_json())
+    # 3. Save to Redis for 30 seconds
+    redis_db.setex(CACHE_KEY, 30, stats.model_dump_json())
     
     return stats
