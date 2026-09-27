@@ -11,9 +11,10 @@ from typing import Optional
 from schemas.complaint import ComplaintCreate, ComplaintStatus
 from database import SessionLocal
 from models.complaint import ComplaintModel
+from schemas.triage import TriageResult
 
 
-def create(data: ComplaintCreate) -> ComplaintModel:
+def create(data: ComplaintCreate, triage_result: TriageResult, latency_ms: int) -> ComplaintModel:
     db = SessionLocal()
     try:
         complaint_id = f"CMP-{uuid.uuid4().hex[:8].upper()}"
@@ -24,7 +25,12 @@ def create(data: ComplaintCreate) -> ComplaintModel:
             category=data.category,
             location=data.location,
             status=ComplaintStatus.open,
-            upvotes=0
+            upvotes=0,
+            priority=triage_result.priority,
+            ai_summary=triage_result.summary,
+            triaged_by=triage_result.triaged_by,
+            triage_latency_ms=latency_ms,
+            triage_confidence=triage_result.confidence,
         )
         db.add(record)
         db.commit()

@@ -1,6 +1,6 @@
 import React, { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { ComplaintCategory } from '../types/complaint';
+import type { Complaint, ComplaintCategory } from '../types/complaint';
 import { api, ApiError } from '../client';
 
 const CATEGORIES: ComplaintCategory[] = [
@@ -25,6 +25,7 @@ export default function SubmitPage() {
   const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
   const [newId, setNewId] = useState('');
+  const [createdComplaint, setCreatedComplaint] = useState<Complaint | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
@@ -75,6 +76,7 @@ export default function SubmitPage() {
       });
 
       setNewId(complaint.id);
+      setCreatedComplaint(complaint);
       setSubmitted(true);
     } catch (error) {
       if (error instanceof ApiError) {
@@ -96,6 +98,7 @@ export default function SubmitPage() {
     setErrors({});
     setSubmitError('');
     setIsSubmitting(false);
+    setCreatedComplaint(null);
     setSubmitted(false);
   }
 
@@ -106,6 +109,20 @@ export default function SubmitPage() {
           <div className="toast" style={{ marginBottom: 'var(--sp-6)' }}>
             ✅ &nbsp;Complaint <strong>{newId}</strong> submitted successfully!
           </div>
+
+          {createdComplaint && (
+            <div className="card" style={{ marginBottom: 'var(--sp-6)' }}>
+              <h2 style={{ marginBottom: 'var(--sp-4)', fontWeight: 700 }}>
+                Triage result
+              </h2>
+              <p><strong>Category:</strong> {createdComplaint.category}</p>
+              <p><strong>Priority:</strong> {createdComplaint.priority}</p>
+              <p><strong>Summary:</strong> {createdComplaint.ai_summary}</p>
+              <p><strong>Provider:</strong> {createdComplaint.triaged_by}</p>
+              <p><strong>Confidence:</strong> {createdComplaint.triage_confidence.toFixed(2)}</p>
+              <p><strong>Latency:</strong> {createdComplaint.triage_latency_ms} ms</p>
+            </div>
+          )}
 
           <div className="card">
             <h2 style={{ marginBottom: 'var(--sp-4)', fontWeight: 700 }}>What's next?</h2>

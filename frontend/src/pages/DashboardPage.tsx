@@ -170,6 +170,9 @@ export default function DashboardPage() {
 
                 <h2 className="complaint-card__title">{c.title}</h2>
                 <p className="complaint-card__description">{c.description}</p>
+                <p className="complaint-card__description">
+                  <strong>AI summary:</strong> {c.ai_summary}
+                </p>
 
                 <div className="complaint-card__footer">
                   <div className="complaint-card__meta">
@@ -177,6 +180,12 @@ export default function DashboardPage() {
                   </div>
                   <div className="complaint-card__meta">
                     🏷️ {c.category}
+                  </div>
+                  <div className="complaint-card__meta">
+                    ⚑ {c.priority}
+                  </div>
+                  <div className="complaint-card__meta">
+                    🤖 {c.triaged_by}
                   </div>
                   <div className="complaint-card__meta">
                     📅 {formatDate(c.submitted_at)}
