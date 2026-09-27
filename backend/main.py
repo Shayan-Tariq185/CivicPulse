@@ -9,9 +9,12 @@ Responsibilities:
 """
 from __future__ import annotations
 
-from fastapi import FastAPI
+import time
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
+from redis_client import redis_db
 from routers import complaints, meta, stats
 
 app = FastAPI(
@@ -19,6 +22,22 @@ app = FastAPI(
     description="Complaint management API for CivicPulse — CS4032 Assignment 01",
     version="0.2.0",  # Phase 2: in-memory store
 )
+
+# ── Rate Limiting ────────────────────────────────────────────────────────────
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    current_minute = int(time.time() // 60)
+    key = f"civicpulse:ratelimit:{client_ip}:{current_minute}"
+    
+    current_count = redis_db.incr(key)
+    if current_count == 1:
+        redis_db.expire(key, 60)
+        
+    if current_count > 100:
+        return JSONResponse(status_code=429, content={"detail": "Too Many Requests"})
+        
+    return await call_next(request)
 
 # ── CORS ─────────────────────────────────────────────────────────────────────
 # Allow the Vite dev server (port 5173) in development.
