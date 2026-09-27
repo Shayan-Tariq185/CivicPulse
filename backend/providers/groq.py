@@ -1,9 +1,11 @@
 import asyncio
 import logging
 import random
+import hashlib
 
 import httpx
 
+from redis_client import redis_db
 from providers.rules import RuleBasedTriage
 from schemas.complaint import ComplaintCategory
 from schemas.triage import TriageResult
@@ -19,10 +21,26 @@ class GroqTriage:
         self.timeout_seconds = timeout_seconds
 
     async def triage(self, text: str, location: str) -> TriageResult:
+        # 1. Create a unique cache key based on the text
+        text_hash = hashlib.sha256(text.encode('utf-8')).hexdigest()
+        cache_key = f"civicpulse:triage:{text_hash}"
+        
+        # 2. Check if we already triaged this exact text recently
+        cached_result = redis_db.get(cache_key)
+        if cached_result:
+            # Add a flag so we know it came from cache
+            parsed = TriageResult.model_validate_json(cached_result)
+            return parsed.model_copy(update={"triaged_by": "llm:groq:cached"})
+
         try:
             content = await self._request_with_retry(text, location)
             result = TriageResult.model_validate_json(content)
-            return result.model_copy(update={"triaged_by": "llm:groq"})
+            final_result = result.model_copy(update={"triaged_by": "llm:groq"})
+            
+            # 3. Save the result to Redis for 1 hour
+            redis_db.setex(cache_key, 3600, final_result.model_dump_json())
+            
+            return final_result
         except Exception as error:
             status_code = getattr(getattr(error, "response", None), "status_code", None)
             logger.warning(
