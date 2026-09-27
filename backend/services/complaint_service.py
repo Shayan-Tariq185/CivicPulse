@@ -14,6 +14,8 @@ from repositories import complaint_repo
 from providers.factory import get_triage_provider
 from providers.history import record_outcome
 from providers.rules import RuleBasedTriage
+from metrics import record_triage
+from redis_client import redis_db
 from schemas.complaint import (
     ComplaintCreate,
     ComplaintOut,
@@ -63,8 +65,13 @@ async def create_complaint(data: ComplaintCreate) -> ComplaintOut:
         latency_ms=latency_ms,
         fallback=triage_result.triaged_by == "rules:fallback",
     )
+    record_triage(
+        latency_ms=latency_ms,
+        fallback=triage_result.triaged_by == "rules:fallback",
+    )
     triaged_data = data.model_copy(update={"category": triage_result.category})
     record = complaint_repo.create(triaged_data, triage_result, latency_ms)
+    redis_db.delete("civicpulse:stats")
     return _to_out(record)
 
 
@@ -101,4 +108,5 @@ def update_status(complaint_id: str, body: StatusUpdate) -> ComplaintOut:
         )
 
     updated = complaint_repo.update_status(complaint_id, body.status)
+    redis_db.delete("civicpulse:stats")
     return _to_out(updated)
