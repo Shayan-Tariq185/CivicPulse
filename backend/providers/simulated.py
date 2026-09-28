@@ -1,5 +1,5 @@
-from schemas.triage import TriageResult
 from providers.rules import RuleBasedTriage
+from schemas.triage import TriageResult
 
 
 class SimulatedTriage:

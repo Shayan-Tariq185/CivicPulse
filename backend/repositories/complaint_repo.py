@@ -6,11 +6,10 @@ Phase 4: Uses PostgreSQL database to persist data.
 from __future__ import annotations
 
 import uuid
-from typing import Optional
 
-from schemas.complaint import ComplaintCreate, ComplaintStatus
 from database import SessionLocal
 from models.complaint import ComplaintModel
+from schemas.complaint import ComplaintCreate, ComplaintStatus
 from schemas.triage import TriageResult
 
 
@@ -22,9 +21,9 @@ def create(data: ComplaintCreate, triage_result: TriageResult, latency_ms: int) 
             id=complaint_id,
             title=data.title,
             description=data.description,
-            category=data.category,
+            category=data.category.value,
             location=data.location,
-            status=ComplaintStatus.open,
+            status=ComplaintStatus.open.value,
             upvotes=0,
             priority=triage_result.priority,
             ai_summary=triage_result.summary,
@@ -40,7 +39,7 @@ def create(data: ComplaintCreate, triage_result: TriageResult, latency_ms: int) 
         db.close()
 
 
-def get_by_id(complaint_id: str) -> Optional[ComplaintModel]:
+def get_by_id(complaint_id: str) -> ComplaintModel | None:
     db = SessionLocal()
     try:
         return db.query(ComplaintModel).filter(ComplaintModel.id == complaint_id).first()
@@ -56,13 +55,13 @@ def list_all() -> list[ComplaintModel]:
         db.close()
 
 
-def update_status(complaint_id: str, new_status: ComplaintStatus) -> Optional[ComplaintModel]:
+def update_status(complaint_id: str, new_status: ComplaintStatus) -> ComplaintModel | None:
     db = SessionLocal()
     try:
         record = db.query(ComplaintModel).filter(ComplaintModel.id == complaint_id).first()
         if not record:
             return None
-        record.status = new_status
+        record.status = new_status.value  # type: ignore[assignment]
         db.commit()
         db.refresh(record)
         return record

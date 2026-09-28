@@ -3,9 +3,8 @@ from __future__ import annotations
 from collections import Counter
 from threading import Lock
 
-
 _lock = Lock()
-_request_count = Counter()
+_request_count: Counter[tuple[str, str, int]] = Counter()
 _request_latency_ms: list[float] = []
 _triage_latency_ms: list[float] = []
 _fallback_count = 0

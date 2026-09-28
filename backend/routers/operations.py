@@ -2,8 +2,8 @@ from fastapi import APIRouter, Response, status
 from sqlalchemy import text
 
 from database import engine
-from redis_client import check_redis_health
 from metrics import prometheus_text
+from redis_client import check_redis_health
 
 router = APIRouter(tags=["operations"])
 
@@ -22,7 +22,7 @@ def ready(response: Response) -> dict[str, object]:
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
         postgres_ok = True
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
 
     redis_ok = check_redis_health()
