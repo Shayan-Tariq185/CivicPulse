@@ -10,12 +10,12 @@ import time
 
 from fastapi import HTTPException, status
 
-from repositories import complaint_repo
+from metrics import record_triage
 from providers.factory import get_triage_provider
 from providers.history import record_outcome
 from providers.rules import RuleBasedTriage
-from metrics import record_triage
 from redis_client import redis_db
+from repositories import complaint_repo
 from schemas.complaint import (
     ComplaintCreate,
     ComplaintOut,
@@ -55,7 +55,7 @@ async def create_complaint(data: ComplaintCreate) -> ComplaintOut:
     try:
         triage_provider = get_triage_provider()
         triage_result = await triage_provider.triage(data.description, data.location)
-    except Exception:
+    except Exception:  # noqa: BLE001
         triage_result = await RuleBasedTriage().triage(data.description, data.location)
         triage_result = triage_result.model_copy(update={"triaged_by": "rules:fallback"})
 
@@ -97,7 +97,7 @@ def update_status(complaint_id: str, body: StatusUpdate) -> ComplaintOut:
             detail=f"Complaint '{complaint_id}' not found.",
         )
 
-    allowed = _ALLOWED_TRANSITIONS[record.status]
+    allowed = _ALLOWED_TRANSITIONS[ComplaintStatus(record.status)]
     if body.status not in allowed:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

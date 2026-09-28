@@ -1,15 +1,14 @@
 import asyncio
+import hashlib
 import logging
 import random
-import hashlib
 
 import httpx
 
-from redis_client import redis_db
 from providers.rules import RuleBasedTriage
+from redis_client import redis_db
 from schemas.complaint import ComplaintCategory
 from schemas.triage import TriageResult
-
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +40,7 @@ class GroqTriage:
             redis_db.setex(cache_key, 3600, final_result.model_dump_json())
             
             return final_result
-        except Exception as error:
+        except Exception as error:  # noqa: BLE001
             status_code = getattr(getattr(error, "response", None), "status_code", None)
             logger.warning(
                 "Groq triage failed; using rules fallback (%s, status=%s)",
@@ -99,7 +98,7 @@ class GroqTriage:
                 body = response.json()
                 return body["choices"][0]["message"]["content"]
             except (httpx.TimeoutException, httpx.HTTPStatusError) as error:
-                status_code = getattr(error.response, "status_code", None)
+                status_code = getattr(getattr(error, "response", None), "status_code", None)
                 retryable_status = status_code == 429 or (
                     status_code is not None and status_code >= 500
                 )

@@ -1,6 +1,9 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Integer, DateTime, Float
+
+from sqlalchemy import Column, DateTime, Float, Integer, String
+
 from database import Base
+
 
 class ComplaintModel(Base):
     __tablename__ = "complaints"

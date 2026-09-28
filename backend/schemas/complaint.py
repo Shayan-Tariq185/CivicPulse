@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime
-from pydantic import BaseModel, Field
-from schemas.enums import ComplaintCategory, ComplaintStatus, Priority
 
+from pydantic import BaseModel, Field
+
+from schemas.enums import ComplaintCategory, ComplaintStatus, Priority
 
 # ── Inbound ──────────────────────────────────────────────────────────────────
 

@@ -1,7 +1,6 @@
 from schemas.complaint import ComplaintCategory
 from schemas.triage import Priority, TriageResult
 
-
 _CATEGORY_RULES: tuple[tuple[tuple[str, ...], ComplaintCategory], ...] = (
     (("pipe", "leak", "water", "drain", "sewer"), ComplaintCategory.water),
     (("electricity", "electric", "power", "streetlight", "street light"), ComplaintCategory.electricity),

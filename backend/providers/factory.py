@@ -1,8 +1,8 @@
+from config import settings
 from providers.base import TriageProvider
 from providers.groq import GroqTriage
 from providers.rules import RuleBasedTriage
 from providers.simulated import SimulatedTriage
-from config import settings
 
 
 def get_triage_provider() -> TriageProvider:
