@@ -16,14 +16,13 @@ import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from database import engine
 from metrics import record_request
 from redis_client import redis_db
 from routers import complaints, meta, operations, stats
-
 
 logger = logging.getLogger("civicpulse.request")
 

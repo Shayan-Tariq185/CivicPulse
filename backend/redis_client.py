@@ -1,4 +1,5 @@
 import redis
+
 from config import settings
 
 # Create a global Redis connection pool

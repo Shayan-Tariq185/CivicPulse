@@ -1,5 +1,5 @@
-from collections import Counter
 import json
+from collections import Counter
 
 from fastapi import APIRouter, Response
 
@@ -25,8 +25,8 @@ def get_stats(response: Response) -> StatsOut:
     complaints = complaint_repo.list_all()
     
     # SQLAlchemy model returns strings, not Enums, so we just use the string directly
-    status_counts = Counter(complaint.status for complaint in complaints)
-    category_counts = Counter(complaint.category for complaint in complaints)
+    status_counts = Counter(str(complaint.status) for complaint in complaints)
+    category_counts = Counter(str(complaint.category) for complaint in complaints)
 
     stats = StatsOut(
         total=len(complaints),

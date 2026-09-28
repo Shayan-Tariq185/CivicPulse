@@ -5,11 +5,16 @@ import pytest
 from fastapi import Response
 
 from metrics import prometheus_text
-from providers.history import _outcomes, record_outcome, recent_outcomes
+from providers.history import _outcomes, recent_outcomes, record_outcome
 from providers.rules import RuleBasedTriage
 from providers.simulated import SimulatedTriage
 from routers import operations, stats
-from schemas.complaint import ComplaintCreate, ComplaintCategory, ComplaintStatus, StatusUpdate
+from schemas.complaint import (
+    ComplaintCategory,
+    ComplaintCreate,
+    ComplaintStatus,
+    StatusUpdate,
+)
 from schemas.triage import Priority, TriageResult
 from services import complaint_service
 
@@ -109,7 +114,7 @@ def test_provider_history_is_bounded_to_twenty():
 def test_stats_cache_miss_uses_thirty_second_ttl(monkeypatch):
     fake = FakeRedis()
     monkeypatch.setattr(stats, "redis_db", fake)
-    monkeypatch.setattr(stats.complaint_repo, "list_all", lambda: [])
+    monkeypatch.setattr(stats.complaint_repo, "list_all", list)
     response = Response()
     stats.get_stats(response)
     assert response.headers["X-Cache"] == "MISS"
