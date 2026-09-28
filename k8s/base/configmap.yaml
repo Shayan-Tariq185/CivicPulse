@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: civicpulse-config
+data:
+  APP_ENV: "production"
+  REDIS_URL: "redis://redis:6379/0"
+  TRIAGE_PROVIDER: "groq"
+  GROQ_MODEL: "llama-3.1-8b-instant"
+  POSTGRES_DB: "civicpulse"
+  POSTGRES_USER: "postgres"
