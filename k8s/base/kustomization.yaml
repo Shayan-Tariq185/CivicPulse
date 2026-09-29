@@ -8,6 +8,7 @@ resources:
   - redis.yaml
   - migrate-job.yaml
   - backend.yaml
+  - backend-hpa.yaml
   - frontend.yaml
   - ingress.yaml
 # secret.template.yaml is intentionally NOT listed: the real Secret is created with kubectl.

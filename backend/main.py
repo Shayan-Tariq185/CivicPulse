@@ -19,6 +19,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from config import settings
 from database import engine
 from metrics import record_request
 from redis_client import redis_db
@@ -67,7 +68,7 @@ async def rate_limit_middleware(request: Request, call_next):
     if current_count == 1:
         redis_db.expire(key, 60)
         
-    if current_count > 100:
+    if current_count > settings.RATE_LIMIT_PER_MINUTE:
         return JSONResponse(
             status_code=429,
             content={"detail": "Too Many Requests"},
