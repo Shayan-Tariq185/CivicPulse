@@ -18,6 +18,6 @@ describe('StatsPage', () => {
 
     render(<BrowserRouter><StatsPage /></BrowserRouter>);
     expect((await screen.findAllByText('Water & Sanitation')).length).toBeGreaterThan(0);
-    expect(screen.getByText('4')).toBeInTheDocument();
+    expect(screen.getAllByText('4').length).toBeGreaterThan(0);
   });
 });

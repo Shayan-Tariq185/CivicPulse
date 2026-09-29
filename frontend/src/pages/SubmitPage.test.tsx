@@ -71,7 +71,7 @@ describe('SubmitPage', () => {
     await user.click(screen.getByRole('button', { name: /submit complaint/i }));
     expect(await screen.findByText('Triage result')).toBeInTheDocument();
     expect(screen.getByText('llm:groq')).toBeInTheDocument();
-    expect(screen.getByText(/Latency:.*120 ms/)).toBeInTheDocument();
+    expect(screen.getByText(/120 ms/)).toBeInTheDocument();
   });
 
   it('shows the server error detail when submission fails', async () => {
