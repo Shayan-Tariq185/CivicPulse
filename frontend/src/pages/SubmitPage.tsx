@@ -41,7 +41,11 @@ export default function SubmitPage() {
   function validate(): boolean {
     const e: FormErrors = {};
     if (!form.title.trim())       e.title       = 'Title is required';
-    if (!form.description.trim()) e.description = 'Description is required';
+    if (!form.description.trim()) {
+      e.description = 'Description is required';
+    } else if (form.description.trim().length < 10) {
+      e.description = 'Description must be at least 10 characters';
+    }
     if (!form.category)           e.category    = 'Please select a category';
     if (!form.location.trim())    e.location    = 'Location is required';
     setErrors(e);
