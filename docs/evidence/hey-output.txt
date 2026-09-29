@@ -1,0 +1,8 @@
+Unable to find image 'civicpulse-hey:latest' locally
+docker: Error response from daemon: pull access denied for civicpulse-hey, repository does not exist or may require 'docker login'
+System.Management.Automation.RemoteException
+Run 'docker run --help' for more information
+Unable to find image 'civicpulse-hey:latest' locally
+docker: Error response from daemon: pull access denied for civicpulse-hey, repository does not exist or may require 'docker login'
+System.Management.Automation.RemoteException
+Run 'docker run --help' for more information

@@ -1,0 +1,12 @@
+2026-09-29 05:14:09 backend-hpa   Deployment/backend   cpu: <unknown>/60%   2     10    2     109s
+2026-09-29 05:14:14 backend-hpa   Deployment/backend   cpu: <unknown>/60%   2     10    2     114s
+2026-09-29 05:14:20 backend-hpa   Deployment/backend   cpu: <unknown>/60%   2     10    2     2m
+2026-09-29 05:14:20 LOAD_START
+2026-09-29 05:14:23 LOAD_END
+2026-09-29 05:14:25 backend-hpa   Deployment/backend   cpu: 4%/60%   2     10    2     2m5s
+2026-09-29 05:14:30 backend-hpa   Deployment/backend   cpu: 4%/60%   2     10    2     2m10s
+2026-09-29 05:14:35 backend-hpa   Deployment/backend   cpu: 4%/60%   2     10    2     2m15s
+2026-09-29 05:14:37 LOAD_START
+2026-09-29 05:14:39 LOAD_END
+2026-09-29 05:14:40 backend-hpa   Deployment/backend   cpu: 5%/60%   2     10    2     2m20s
+2026-09-29 05:14:45 backend-hpa   Deployment/backend   cpu: 5%/60%   2     10    2     2m26s

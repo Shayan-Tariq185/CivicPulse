@@ -1,0 +1,13 @@
+# Recommendation-only: "Off" never evicts or resizes pods, so it cannot fight the HPA.
+# Requires the VPA CRD + recommender to be installed first (see Phase 10 steps).
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: backend-vpa
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+  updatePolicy:
+    updateMode: "Off"
