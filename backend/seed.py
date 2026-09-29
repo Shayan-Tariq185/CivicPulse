@@ -3,6 +3,7 @@ import uuid
 from database import SessionLocal
 from models.complaint import ComplaintModel
 
+
 def seed_db():
     db = SessionLocal()
     try:
